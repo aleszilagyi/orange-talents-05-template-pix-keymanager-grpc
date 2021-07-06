@@ -1,0 +1,38 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "br.com.orangetalents";
+option java_outer_classname = "DesafioPix";
+option objc_class_prefix = "HLW";
+
+package br.com.orangetalents;
+
+service KeyManagerRegistraPixService {
+  rpc registrar (RegistraChavePixRequest) returns (RegistraChavePixReply) {}
+}
+
+enum TipoDeChave{
+  UNKNOWN_CHAVE = 0;
+  CPF = 1;
+  CELULAR = 2;
+  EMAIL = 3;
+  ALEATORIA = 4;
+}
+
+enum TipoDeConta{
+  UNKNOWN_CONTA = 0;
+  CONTA_CORRENTE = 1;
+  CONTA_POUPANCA = 2;
+}
+
+message RegistraChavePixRequest {
+  string clienteId = 1;
+  TipoDeChave tipoDeChave = 2;
+  string chavePix = 3;
+  TipoDeConta tipoDeConta = 4;
+}
+
+message RegistraChavePixReply {
+  string clienteId = 1;
+  string pixId = 2;
+}
