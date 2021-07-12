@@ -5,6 +5,7 @@ import br.com.orangetalents.common.exception.IExceptionHandler
 import br.com.orangetalents.common.exception.StatusWithDetails
 import com.google.rpc.BadRequest
 import com.google.rpc.Code.*
+import com.google.rpc.Status
 import javax.inject.Singleton
 import javax.validation.ConstraintViolationException
 
@@ -22,7 +23,7 @@ class ConstraintViolationExceptionHandler : IExceptionHandler<ConstraintViolatio
             })
             .build()
 
-        val statusProto = com.google.rpc.Status.newBuilder()
+        val statusProto = Status.newBuilder()
             .setCode(INVALID_ARGUMENT_VALUE)
             .setMessage("Dados inválidos")
             .addDetails(Any.pack(details))

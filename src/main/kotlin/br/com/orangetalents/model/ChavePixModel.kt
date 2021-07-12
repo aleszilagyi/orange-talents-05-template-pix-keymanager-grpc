@@ -52,6 +52,21 @@ class ChavePixModel(
     @Column(updatable = true, nullable = false)
     @UpdateTimestamp
     val atualizadoEm: LocalDateTime = LocalDateTime.now()
+
+    fun pertenceAo(clienteId: UUID) = this.clienteId.equals(clienteId)
+
+    fun isRandom(): Boolean {
+        return tipoDeChave == TipoDeChaveModel.ALEATORIA
+    }
+
+    //Chaves aleatórias devem ser atualizadas quando surge um novo pedido de registro
+    fun atualiza(chave: String): Boolean {
+        if (isRandom()) {
+            this.chave = chave
+            return true
+        }
+        return false
+    }
 }
 
 enum class TipoDeChaveModel {

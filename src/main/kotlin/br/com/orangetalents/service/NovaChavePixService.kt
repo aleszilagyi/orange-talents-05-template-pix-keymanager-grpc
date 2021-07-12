@@ -1,5 +1,7 @@
 package br.com.orangetalents.service
 
+import br.com.orangetalents.common.exception.ErrorHandler
+import br.com.orangetalents.common.exception.customException.ChavePixExistenteException
 import br.com.orangetalents.dto.ChavePixDto
 import br.com.orangetalents.model.ChavePixModel
 import br.com.orangetalents.repository.ChavePixRepository
@@ -22,10 +24,10 @@ class NovaChavePixService(
     @Transactional
     fun registra(@Valid novaChavePix: ChavePixDto): ChavePixModel {
 
-        if (repository.existsByChave(novaChavePix.chavePix)) throw IllegalStateException("chave pix ${novaChavePix.chavePix} existente")
+        if (repository.existsByChave(novaChavePix.chavePix)) throw ChavePixExistenteException("Chave PIX ${novaChavePix.chavePix} já existe")
 
         val response = itauClient.verificaContaPorTipo(novaChavePix.clienteId!!, novaChavePix.tipoDeConta!!.name)
-        val conta = response.body()?.toModel() ?: throw IllegalStateException("cliente não encontrado no Itaú")
+        val conta = response.body()?.toModel() ?: throw IllegalStateException("Cliente não encontrado no Itaú")
 
         val chave = novaChavePix.toModel(conta)
         repository.save(chave)

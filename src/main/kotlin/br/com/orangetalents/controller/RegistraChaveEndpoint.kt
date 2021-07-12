@@ -3,11 +3,13 @@ package br.com.orangetalents.controller
 import br.com.orangetalents.KeyManagerRegistraPixServiceGrpc
 import br.com.orangetalents.RegistraChavePixReply
 import br.com.orangetalents.RegistraChavePixRequest
+import br.com.orangetalents.common.exception.ErrorHandler
 import br.com.orangetalents.service.NovaChavePixService
 import io.grpc.stub.StreamObserver
 import javax.inject.Inject
 import javax.inject.Singleton
 
+@ErrorHandler
 @Singleton
 class RegistraChaveEndpoint(@Inject private val service: NovaChavePixService) :
     KeyManagerRegistraPixServiceGrpc.KeyManagerRegistraPixServiceImplBase() {
