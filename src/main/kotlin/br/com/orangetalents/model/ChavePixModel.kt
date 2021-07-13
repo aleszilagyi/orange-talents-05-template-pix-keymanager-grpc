@@ -59,7 +59,7 @@ class ChavePixModel(
         return tipoDeChave == TipoDeChaveModel.ALEATORIA
     }
 
-    //Chaves aleatórias devem ser atualizadas quando surge um novo pedido de registro
+    //Agora as chaves são atualizadas pelo retorno do BACEN
     fun atualiza(chave: String): Boolean {
         if (isRandom()) {
             this.chave = chave

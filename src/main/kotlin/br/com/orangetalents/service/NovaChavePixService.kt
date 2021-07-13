@@ -1,11 +1,13 @@
 package br.com.orangetalents.service
 
-import br.com.orangetalents.common.exception.ErrorHandler
 import br.com.orangetalents.common.exception.customException.ChavePixExistenteException
 import br.com.orangetalents.dto.ChavePixDto
 import br.com.orangetalents.model.ChavePixModel
 import br.com.orangetalents.repository.ChavePixRepository
+import br.com.orangetalents.service.clientBacen.BacenClient
+import br.com.orangetalents.service.clientBacen.CreatePixRequestDto
 import br.com.orangetalents.service.clientItau.ContasDeClientesItauClient
+import io.micronaut.http.HttpStatus
 import io.micronaut.validation.Validated
 import org.slf4j.LoggerFactory
 import javax.inject.Inject
@@ -17,7 +19,8 @@ import javax.validation.Valid
 @Singleton
 class NovaChavePixService(
     @Inject val repository: ChavePixRepository,
-    @Inject val itauClient: ContasDeClientesItauClient
+    @Inject val itauClient: ContasDeClientesItauClient,
+    @Inject val bacenClient: BacenClient
 ) {
     private val LOGGER = LoggerFactory.getLogger(this::class.java)
 
@@ -31,6 +34,16 @@ class NovaChavePixService(
 
         val chave = novaChavePix.toModel(conta)
         repository.save(chave)
+
+        val bacenRequest = CreatePixRequestDto.of(chave).also { // 1
+            LOGGER.info("Registrando chave Pix no Banco Central do Brasil (BCB): $it")
+        }
+
+        val bacenResponse = bacenClient.create(bacenRequest) // 1
+        if (bacenResponse.status != HttpStatus.CREATED) // 1
+            throw IllegalStateException("Erro ao registrar chave Pix no Banco Central do Brasil (BCB)")
+
+        chave.atualiza(bacenResponse.body()!!.key)
 
         return chave
     }

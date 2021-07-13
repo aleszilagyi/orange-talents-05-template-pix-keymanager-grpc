@@ -74,7 +74,7 @@ internal class RegistraChaveEndpointTest(
             RegistraChavePixRequest.newBuilder()
                 .setClienteId(CLIENTE_ID.toString())
                 .setTipoDeChave(TipoDeChave.EMAIL)
-                .setChavePix("yurimatheus@gmail.com")
+                .setChavePix("teste@gmail.com")
                 .setTipoDeConta(TipoDeConta.CONTA_CORRENTE)
                 .build()
         )
@@ -92,7 +92,7 @@ internal class RegistraChaveEndpointTest(
         repository.save(
             instaciaChave(
                 tipo = TipoDeChaveModel.CPF,
-                chave = "63657520325",
+                chave = "86135457004",
                 clienteId = CLIENTE_ID
             )
         )
@@ -103,7 +103,7 @@ internal class RegistraChaveEndpointTest(
                 RegistraChavePixRequest.newBuilder()
                     .setClienteId(CLIENTE_ID.toString())
                     .setTipoDeChave(TipoDeChave.CPF)
-                    .setChavePix("63657520325")
+                    .setChavePix("86135457004")
                     .setTipoDeConta(TipoDeConta.CONTA_CORRENTE)
                     .build()
             )
@@ -112,7 +112,32 @@ internal class RegistraChaveEndpointTest(
         // validação
         with(thrown) {
             assertEquals(Status.ALREADY_EXISTS.code, status.code)
-            assertEquals("Chave PIX 63657520325 já existe", status.description)
+            assertEquals("Chave PIX 86135457004 já existe", status.description)
+        }
+    }
+
+    @Test
+    fun `nao deve registrar chave pix quando nao encontrar dados da conta cliente`() {
+        // mockar um notfound pro ItauClient
+        `when`(itauClient.verificaContaPorTipo(clienteId = CLIENTE_ID.toString(), tipoDeConta = "CONTA_CORRENTE"))
+            .thenReturn(HttpResponse.notFound())
+
+        // Tentar registrar e tomar falha na cara
+        val thrown = assertThrows<StatusRuntimeException> {
+            grpcClient.registrar(
+                RegistraChavePixRequest.newBuilder()
+                    .setClienteId(CLIENTE_ID.toString())
+                    .setTipoDeChave(TipoDeChave.EMAIL)
+                    .setChavePix("yurimatheus@gmail.com")
+                    .setTipoDeConta(TipoDeConta.CONTA_CORRENTE)
+                    .build()
+            )
+        }
+
+        // validação
+        with(thrown) {
+            assertEquals(Status.FAILED_PRECONDITION.code, status.code)
+            assertEquals("Cliente não encontrado no Itaú", status.description)
         }
     }
 
@@ -123,10 +148,10 @@ internal class RegistraChaveEndpointTest(
             chave = chave,
             tipoDeConta = TipoDeContaModel.CONTA_CORRENTE,
             conta = ContaEmbeddable(
-                instituicao = "UNIBANCO ITAU",
-                nomeDoTitular = "Rafael Ponte",
-                cpfDoTitular = "63657520325",
-                agencia = "1218",
+                instituicao = "ITAÚ UNIBANCO S.A",
+                nomeDoTitular = "Yuri Matheus",
+                cpfDoTitular = "86135457004",
+                agencia = "0001",
                 numero = "291900"
             )
         )
