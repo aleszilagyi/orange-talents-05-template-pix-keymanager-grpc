@@ -20,7 +20,7 @@ import kotlin.reflect.KClass
     CLASS
 )
 annotation class ValidTipoChave(
-    val message: String = "tipo de ({validatedValue}) inválido",
+    val message: String = "tipo de (\${validatedValue.tipoDeChave}) inválido",
     val groups: Array<KClass<Any>> = [],
     val payload: Array<KClass<Payload>> = [],
 )
@@ -31,8 +31,8 @@ class ValidTipoChaveValidator : ConstraintValidator<ValidTipoChave, ChavePixDto>
         annotationMetadata: AnnotationValue<ValidTipoChave>,
         context: ConstraintValidatorContext
     ): Boolean {
-        if (value == null) return true
+        if (value?.tipoDeChave == null) return true
 
-        return value.tipoDeChave!!.validate(value.chavePix)
+        return value.tipoDeChave.validate(value.chavePix)
     }
 }

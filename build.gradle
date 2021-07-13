@@ -50,6 +50,7 @@ dependencies {
     testImplementation("org.mockito:mockito-core")
 
     testImplementation("io.micronaut:micronaut-http-client")
+    testImplementation("org.hamcrest:hamcrest-core:2.2")
 
 }
 

@@ -9,10 +9,12 @@ import br.com.orangetalents.model.ContaEmbeddable
 import br.com.orangetalents.model.TipoDeChaveModel
 import br.com.orangetalents.model.TipoDeContaModel
 import br.com.orangetalents.repository.ChavePixRepository
+import br.com.orangetalents.service.clientBacen.BacenClient
 import br.com.orangetalents.service.clientItau.ContasDeClientesItauClient
 import br.com.orangetalents.service.clientItau.DadosDeContasResponseDto
 import br.com.orangetalents.service.clientItau.InstituicaoResponseDto
 import br.com.orangetalents.service.clientItau.TitularResponseDto
+import br.com.orangetalents.utils.violations
 import io.grpc.ManagedChannel
 import io.grpc.Status
 import io.grpc.StatusRuntimeException
@@ -23,6 +25,8 @@ import io.micronaut.grpc.server.GrpcServerChannel.NAME
 import io.micronaut.http.HttpResponse
 import io.micronaut.test.annotation.MockBean
 import io.micronaut.test.extensions.junit5.annotation.MicronautTest
+import org.hamcrest.MatcherAssert.assertThat
+import org.hamcrest.Matchers.containsInAnyOrder
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.BeforeEach
@@ -36,7 +40,7 @@ import javax.inject.Inject
 @MicronautTest(transactional = false)
 internal class RegistraChaveEndpointTest(
     val repository: ChavePixRepository,
-    val grpcClient: KeyManagerRegistraPixServiceGrpc.KeyManagerRegistraPixServiceBlockingStub
+    val gRpcClient: KeyManagerRegistraPixServiceGrpc.KeyManagerRegistraPixServiceBlockingStub
 ) {
     companion object {
         val CLIENTE_ID = UUID.randomUUID()
@@ -44,6 +48,8 @@ internal class RegistraChaveEndpointTest(
 
     @Inject
     lateinit var itauClient: ContasDeClientesItauClient
+    @Inject
+    lateinit var bacenClient: BacenClient
 
     @BeforeEach
     fun initSetup() {
@@ -70,7 +76,7 @@ internal class RegistraChaveEndpointTest(
             .thenReturn(HttpResponse.ok(dadosDaContaResponse()))
 
         // fazer o request no GRpc e atribuir na variável Reply
-        val reply = grpcClient.registrar(
+        val reply = gRpcClient.registrar(
             RegistraChavePixRequest.newBuilder()
                 .setClienteId(CLIENTE_ID.toString())
                 .setTipoDeChave(TipoDeChave.EMAIL)
@@ -99,7 +105,7 @@ internal class RegistraChaveEndpointTest(
 
         // fazer a tentativa de registrar a chave existente
         val thrown = assertThrows<StatusRuntimeException> {
-            grpcClient.registrar(
+            gRpcClient.registrar(
                 RegistraChavePixRequest.newBuilder()
                     .setClienteId(CLIENTE_ID.toString())
                     .setTipoDeChave(TipoDeChave.CPF)
@@ -109,7 +115,6 @@ internal class RegistraChaveEndpointTest(
             )
         }
 
-        // validação
         with(thrown) {
             assertEquals(Status.ALREADY_EXISTS.code, status.code)
             assertEquals("Chave PIX 86135457004 já existe", status.description)
@@ -124,7 +129,7 @@ internal class RegistraChaveEndpointTest(
 
         // Tentar registrar e tomar falha na cara
         val thrown = assertThrows<StatusRuntimeException> {
-            grpcClient.registrar(
+            gRpcClient.registrar(
                 RegistraChavePixRequest.newBuilder()
                     .setClienteId(CLIENTE_ID.toString())
                     .setTipoDeChave(TipoDeChave.EMAIL)
@@ -134,10 +139,47 @@ internal class RegistraChaveEndpointTest(
             )
         }
 
-        // validação
         with(thrown) {
             assertEquals(Status.FAILED_PRECONDITION.code, status.code)
             assertEquals("Cliente não encontrado no Itaú", status.description)
+        }
+    }
+
+    @Test
+    fun `nao deve registrar chave pix quando parametros forem invalidos`() {
+        val thrown = assertThrows<StatusRuntimeException> {
+            gRpcClient.registrar(RegistraChavePixRequest.newBuilder().build())
+        }
+
+        with(thrown) {
+            assertEquals(Status.INVALID_ARGUMENT.code, status.code)
+            assertEquals("Dados inválidos", status.description)
+            assertThat(violations(), containsInAnyOrder(
+                Pair("clienteId", "não deve estar em branco"),
+                Pair("clienteId", "não é um formato válido de UUID"),
+                Pair("tipoDeConta", "não deve ser nulo"),
+                Pair("tipoDeChave", "não deve ser nulo"),
+            ))
+        }
+    }
+
+    @Test
+    fun `nao deve registrar chave pix quando parametros forem invalidos - chave invalida`() {
+        val thrown = assertThrows<StatusRuntimeException> {
+            gRpcClient.registrar(RegistraChavePixRequest.newBuilder()
+                .setClienteId(CLIENTE_ID.toString())
+                .setTipoDeChave(TipoDeChave.CPF)
+                .setChavePix("378.930.cpf-invalido.389-73")
+                .setTipoDeConta(TipoDeConta.CONTA_POUPANCA)
+                .build())
+        }
+
+        with(thrown) {
+            assertEquals(Status.INVALID_ARGUMENT.code, status.code)
+            assertEquals("Dados inválidos", status.description)
+            assertThat(violations(), containsInAnyOrder(
+                Pair("?? key ??", "tipo de (CPF) inválido"),
+            ))
         }
     }
 

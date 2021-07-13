@@ -5,7 +5,6 @@ import br.com.orangetalents.common.exception.IExceptionHandler
 import br.com.orangetalents.common.exception.StatusWithDetails
 import com.google.rpc.BadRequest
 import com.google.rpc.Code.*
-import com.google.rpc.Status
 import javax.inject.Singleton
 import javax.validation.ConstraintViolationException
 
@@ -17,13 +16,13 @@ class ConstraintViolationExceptionHandler : IExceptionHandler<ConstraintViolatio
         val details = BadRequest.newBuilder()
             .addAllFieldViolations(e.constraintViolations.map {
                 BadRequest.FieldViolation.newBuilder()
-                    .setField(it.propertyPath.last().name ?: "?? key ??") // TODO: Precisa implementar o handler das validations a nível de classe, chegam diferente assim como no Spring
+                    .setField(it.propertyPath.last().name ?: "?? key ??") // TODO: Precisa implementar o handler das validations a nível de classe, chegam diferente assim como no Spring, talvez resolve com payload
                     .setDescription(it.message)
                     .build()
             })
             .build()
 
-        val statusProto = Status.newBuilder()
+        val statusProto = com.google.rpc.Status.newBuilder()
             .setCode(INVALID_ARGUMENT_VALUE)
             .setMessage("Dados inválidos")
             .addDetails(Any.pack(details))
