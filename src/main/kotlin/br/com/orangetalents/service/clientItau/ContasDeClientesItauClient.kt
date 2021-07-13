@@ -7,7 +7,7 @@ import io.micronaut.http.annotation.PathVariable
 import io.micronaut.http.annotation.QueryValue
 import io.micronaut.http.client.annotation.Client
 
-@Client("\${services.itau.contas.url}")
+@Client("\${itau.contas.url}")
 interface ContasDeClientesItauClient {
     @Get("/api/v1/clientes/{clienteId}/contas{?tipo}")
     fun verificaContaPorTipo(

@@ -38,19 +38,19 @@ dependencies {
     implementation("org.hibernate:hibernate-validator:6.1.6.Final")
     implementation("org.jetbrains.kotlin:kotlin-reflect:${kotlinVersion}")
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8:${kotlinVersion}")
+
     runtimeOnly("ch.qos.logback:logback-classic")
     runtimeOnly("io.jaegertracing:jaeger-thrift")
     runtimeOnly("org.postgresql:postgresql")
+    runtimeOnly("com.fasterxml.jackson.module:jackson-module-kotlin")
+
+    kaptTest ("io.micronaut:micronaut-inject-java")
     testImplementation("org.testcontainers:junit-jupiter")
     testImplementation("org.testcontainers:postgresql")
     testImplementation("org.testcontainers:testcontainers")
-
-    runtimeOnly("com.fasterxml.jackson.module:jackson-module-kotlin")
-
-    testImplementation("org.mockito:mockito-core")
-
     testImplementation("io.micronaut:micronaut-http-client")
     testImplementation("org.hamcrest:hamcrest-core:2.2")
+    testImplementation("org.mockito:mockito-core")
 
 }
 

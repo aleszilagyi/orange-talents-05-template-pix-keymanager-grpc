@@ -10,15 +10,13 @@ import io.micronaut.http.annotation.Post
 import io.micronaut.http.client.annotation.Client
 import java.time.LocalDateTime
 
-@Client("\${services.bacen.pix.url}")
-interface BacenClient {
+@Client("\${bacen.pix.url}")
+interface BancoCentralClient {
     @Post("/api/v1/pix/keys", produces = [APPLICATION_XML], consumes = [APPLICATION_XML])
-    fun create(
-        @Body request: CreatePixRequestDto
-    ): HttpResponse<CreatePixKeyResponse>
+    fun createPixKey(@Body bodyRequest: CreatePixKeyRequestDto): HttpResponse<CreatePixKeyResponseDto>
 }
 
-data class CreatePixKeyResponse(
+data class CreatePixKeyResponseDto(
     val keyType: PixKeyType,
     val key: String,
     val bankAccount: BankAccount,
@@ -26,27 +24,27 @@ data class CreatePixKeyResponse(
     val createdAt: LocalDateTime
 )
 
-data class CreatePixRequestDto(
+data class CreatePixKeyRequestDto(
     val keyType: PixKeyType,
     val key: String,
     val bankAccount: BankAccount,
     val owner: Owner
 ) {
     companion object {
-        fun of(chave: ChavePixModel): CreatePixRequestDto {
-            return CreatePixRequestDto(
-                keyType = PixKeyType.by(chave.tipoDeChave),
-                key = chave.chave,
+        fun of(pixKey: ChavePixModel): CreatePixKeyRequestDto {
+            return CreatePixKeyRequestDto(
+                keyType = PixKeyType.by(pixKey.tipoDeChave),
+                key = pixKey.chave,
                 bankAccount = BankAccount(
                     participant = "60701190",
-                    branch = chave.conta.agencia,
-                    accountNumber = chave.conta.numero,
-                    accountType = BankAccount.AccountType.by(chave.tipoDeConta),
+                    branch = pixKey.conta.agencia,
+                    accountNumber = pixKey.conta.numero,
+                    accountType = BankAccount.AccountType.by(pixKey.tipoDeConta),
                 ),
                 owner = Owner(
                     type = Owner.OwnerType.NATURAL_PERSON, //Only available for Natural_Person
-                    name = chave.conta.nomeDoTitular,
-                    taxIdNumber = chave.conta.cpfDoTitular
+                    name = pixKey.conta.nomeDoTitular,
+                    taxIdNumber = pixKey.conta.cpfDoTitular
                 )
             )
         }

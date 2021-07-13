@@ -26,10 +26,10 @@ tracing:
     sampler:
       probability: 0.1
 
-services:
-  itau:
-    contas:
-      url: ${ITAU_URL:`http://localhost:9091`}
-  bacen:
-    pix:
-      url: ${BCB_URL:`http://localhost:8082`}
+itau:
+  contas:
+    url: ${ITAU_URL:`http://localhost:9091`}
+
+bacen:
+  pix:
+    url: ${BACEN_URL:`http://localhost:8082`}
