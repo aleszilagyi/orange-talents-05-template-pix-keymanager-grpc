@@ -1,11 +1,11 @@
-package br.com.orangetalents.service
+package br.com.orangetalents.service.registra
 
 import br.com.orangetalents.common.exception.customException.ChavePixExistenteException
 import br.com.orangetalents.dto.ChavePixDto
 import br.com.orangetalents.model.ChavePixModel
 import br.com.orangetalents.repository.ChavePixRepository
-import br.com.orangetalents.service.clientBacen.BancoCentralClient
-import br.com.orangetalents.service.clientBacen.CreatePixKeyRequestDto
+import br.com.orangetalents.service.clientBcb.BcbClient
+import br.com.orangetalents.service.clientBcb.CreatePixKeyRequestDto
 import br.com.orangetalents.service.clientItau.ContasDeClientesItauClient
 import io.micronaut.http.HttpStatus
 import io.micronaut.validation.Validated
@@ -20,7 +20,7 @@ import javax.validation.Valid
 class NovaChavePixService(
     @Inject val repository: ChavePixRepository,
     @Inject val itauClient: ContasDeClientesItauClient,
-    @Inject val bacenClient: BancoCentralClient
+    @Inject val BcbClient: BcbClient
 ) {
     private val LOGGER = LoggerFactory.getLogger(this::class.java)
 
@@ -35,15 +35,15 @@ class NovaChavePixService(
         val chave = novaChavePix.toModel(conta)
         repository.save(chave)
 
-        val bacenRequest = CreatePixKeyRequestDto.of(chave).also {
+        val bcbRequest = CreatePixKeyRequestDto.of(chave).also {
             LOGGER.info("Registrando chave Pix no Banco Central do Brasil (BCB): $it")
         }
 
-        val bacenResponse = bacenClient.createPixKey(bacenRequest)
-        if (bacenResponse.status != HttpStatus.CREATED)
-            throw IllegalStateException("Erro ao registrar chave Pix no Banco Central do Brasil (BCB/Bacen)")
+        val bcbResponse = BcbClient.createPixKey(bcbRequest)
+        if (bcbResponse.status != HttpStatus.CREATED)
+            throw IllegalStateException("Erro ao registrar chave Pix no Banco Central do Brasil (BCB)")
 
-        chave.atualiza(bacenResponse.body()!!.key)
+        chave.atualiza(bcbResponse.body()!!.key)
 
         return chave
     }

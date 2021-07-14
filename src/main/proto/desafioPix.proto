@@ -6,7 +6,11 @@ option java_outer_classname = "DesafioPix";
 package br.com.orangetalents;
 
 service KeyManagerRegistraPixService {
-  rpc registrar (RegistraChavePixRequest) returns (RegistraChavePixReply) {}
+  rpc registra (RegistraChavePixRequest) returns (RegistraChavePixReply) {}
+}
+
+service KeyManagerRemovePixService {
+  rpc remove (RemoveChavePixRequest) returns (RemoveChavePixReply) {}
 }
 
 enum TipoDeChave{
@@ -31,6 +35,16 @@ message RegistraChavePixRequest {
 }
 
 message RegistraChavePixReply {
+  string clienteId = 1;
+  string pixId = 2;
+}
+
+message RemoveChavePixRequest {
+  string clienteId = 1;
+  string pixId = 2;
+}
+
+message RemoveChavePixReply {
   string clienteId = 1;
   string pixId = 2;
 }

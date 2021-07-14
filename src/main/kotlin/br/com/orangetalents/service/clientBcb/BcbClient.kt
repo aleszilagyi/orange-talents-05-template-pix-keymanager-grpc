@@ -1,19 +1,28 @@
-package br.com.orangetalents.service.clientBacen
+package br.com.orangetalents.service.clientBcb
 
 import br.com.orangetalents.model.ChavePixModel
+import br.com.orangetalents.model.ContaEmbeddable
 import br.com.orangetalents.model.TipoDeChaveModel
 import br.com.orangetalents.model.TipoDeContaModel
 import io.micronaut.http.HttpResponse
 import io.micronaut.http.MediaType.APPLICATION_XML
 import io.micronaut.http.annotation.Body
+import io.micronaut.http.annotation.Delete
+import io.micronaut.http.annotation.PathVariable
 import io.micronaut.http.annotation.Post
 import io.micronaut.http.client.annotation.Client
 import java.time.LocalDateTime
 
-@Client("\${bacen.pix.url}")
-interface BancoCentralClient {
+@Client("\${bcb.pix.url}")
+interface BcbClient {
     @Post("/api/v1/pix/keys", produces = [APPLICATION_XML], consumes = [APPLICATION_XML])
     fun createPixKey(@Body bodyRequest: CreatePixKeyRequestDto): HttpResponse<CreatePixKeyResponseDto>
+
+    @Delete("/api/v1/pix/keys/{key}",
+        produces = [APPLICATION_XML],
+        consumes = [APPLICATION_XML]
+    )
+    fun delete(@PathVariable key: String, @Body request: DeletePixKeyRequest): HttpResponse<DeletePixKeyResponse>
 }
 
 data class CreatePixKeyResponseDto(
@@ -36,7 +45,7 @@ data class CreatePixKeyRequestDto(
                 keyType = PixKeyType.by(pixKey.tipoDeChave),
                 key = pixKey.chave,
                 bankAccount = BankAccount(
-                    participant = "60701190",
+                    participant = ContaEmbeddable.ITAU_UNIBANCO_ISPB,
                     branch = pixKey.conta.agencia,
                     accountNumber = pixKey.conta.numero,
                     accountType = BankAccount.AccountType.by(pixKey.tipoDeConta),
@@ -113,3 +122,14 @@ enum class PixKeyType(val domainType: TipoDeChaveModel?) {
         }
     }
 }
+
+data class DeletePixKeyRequest(
+    val key: String,
+    val participant: String = ContaEmbeddable.ITAU_UNIBANCO_ISPB,
+)
+
+data class DeletePixKeyResponse(
+    val key: String,
+    val participant: String,
+    val deletedAt: LocalDateTime
+)

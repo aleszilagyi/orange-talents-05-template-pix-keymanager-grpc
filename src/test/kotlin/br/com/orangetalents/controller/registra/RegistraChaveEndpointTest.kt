@@ -1,4 +1,4 @@
-package br.com.orangetalents.controller
+package br.com.orangetalents.controller.registra
 
 import br.com.orangetalents.KeyManagerRegistraPixServiceGrpc
 import br.com.orangetalents.RegistraChavePixRequest
@@ -9,7 +9,7 @@ import br.com.orangetalents.model.ContaEmbeddable
 import br.com.orangetalents.model.TipoDeChaveModel
 import br.com.orangetalents.model.TipoDeContaModel
 import br.com.orangetalents.repository.ChavePixRepository
-import br.com.orangetalents.service.clientBacen.*
+import br.com.orangetalents.service.clientBcb.*
 import br.com.orangetalents.service.clientItau.ContasDeClientesItauClient
 import br.com.orangetalents.service.clientItau.DadosDeContasResponseDto
 import br.com.orangetalents.service.clientItau.InstituicaoResponseDto
@@ -21,19 +21,17 @@ import io.grpc.StatusRuntimeException
 import io.micronaut.context.annotation.Bean
 import io.micronaut.context.annotation.Factory
 import io.micronaut.grpc.annotation.GrpcChannel
-import io.micronaut.grpc.server.GrpcServerChannel.NAME
+import io.micronaut.grpc.server.GrpcServerChannel
 import io.micronaut.http.HttpResponse
 import io.micronaut.test.annotation.MockBean
 import io.micronaut.test.extensions.junit5.annotation.MicronautTest
-import org.hamcrest.MatcherAssert.assertThat
-import org.hamcrest.Matchers.containsInAnyOrder
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertNotNull
+import org.hamcrest.MatcherAssert
+import org.hamcrest.Matchers
+import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.mockito.Mockito
-import org.mockito.Mockito.`when`
 import java.time.LocalDateTime
 import java.util.*
 import javax.inject.Inject
@@ -44,7 +42,8 @@ internal class RegistraChaveEndpointTest(
     val gRpcClient: KeyManagerRegistraPixServiceGrpc.KeyManagerRegistraPixServiceBlockingStub
 ) {
     @Inject
-    lateinit var bacenClient: BancoCentralClient
+    lateinit var bcbClient: BcbClient
+
     @Inject
     lateinit var itauClient: ContasDeClientesItauClient
 
@@ -62,13 +61,18 @@ internal class RegistraChaveEndpointTest(
     @Test
     fun `deve registrar nova chave pix`() {
         // mockar o response do cliente para preparar o cenário de cliente OK
-        `when`(itauClient.verificaContaPorTipo(clienteId = CLIENTE_ID.toString(), tipoDeConta = "CONTA_CORRENTE"))
+        Mockito.`when`(
+            itauClient.verificaContaPorTipo(
+                clienteId = CLIENTE_ID.toString(),
+                tipoDeConta = "CONTA_CORRENTE"
+            )
+        )
             .thenReturn(HttpResponse.ok(dadosDaContaResponse()))
-        `when`(bacenClient.createPixKey(createPixKeyRequestDto()))
+        Mockito.`when`(bcbClient.createPixKey(createPixKeyRequestDto()))
             .thenReturn(HttpResponse.created(createPixKeyResponseDto()))
 
         // fazer o request no GRpc e atribuir na variável Reply
-        val reply = gRpcClient.registrar(
+        val reply = gRpcClient.registra(
             RegistraChavePixRequest.newBuilder()
                 .setClienteId(CLIENTE_ID.toString())
                 .setTipoDeChave(TipoDeChave.EMAIL)
@@ -79,8 +83,8 @@ internal class RegistraChaveEndpointTest(
 
         // validar as respostas contidas no Reply
         with(reply) {
-            assertEquals(CLIENTE_ID.toString(), clienteId)
-            assertNotNull(pixId)
+            Assertions.assertEquals(CLIENTE_ID.toString(), clienteId)
+            Assertions.assertNotNull(pixId)
         }
     }
 
@@ -97,7 +101,7 @@ internal class RegistraChaveEndpointTest(
 
         // fazer a tentativa de registrar a chave existente
         val thrown = assertThrows<StatusRuntimeException> {
-            gRpcClient.registrar(
+            gRpcClient.registra(
                 RegistraChavePixRequest.newBuilder()
                     .setClienteId(CLIENTE_ID.toString())
                     .setTipoDeChave(TipoDeChave.CPF)
@@ -108,20 +112,25 @@ internal class RegistraChaveEndpointTest(
         }
 
         with(thrown) {
-            assertEquals(Status.ALREADY_EXISTS.code, status.code)
-            assertEquals("Chave PIX 86135457004 já existe", status.description)
+            Assertions.assertEquals(Status.ALREADY_EXISTS.code, status.code)
+            Assertions.assertEquals("Chave PIX 86135457004 já existe", status.description)
         }
     }
 
     @Test
     fun `nao deve registrar chave pix quando nao encontrar dados da conta cliente`() {
         // mockar um notfound pro ItauClient
-        `when`(itauClient.verificaContaPorTipo(clienteId = CLIENTE_ID.toString(), tipoDeConta = "CONTA_CORRENTE"))
+        Mockito.`when`(
+            itauClient.verificaContaPorTipo(
+                clienteId = CLIENTE_ID.toString(),
+                tipoDeConta = "CONTA_CORRENTE"
+            )
+        )
             .thenReturn(HttpResponse.notFound())
 
         // Tentar registrar e tomar falha na cara
         val thrown = assertThrows<StatusRuntimeException> {
-            gRpcClient.registrar(
+            gRpcClient.registra(
                 RegistraChavePixRequest.newBuilder()
                     .setClienteId(CLIENTE_ID.toString())
                     .setTipoDeChave(TipoDeChave.EMAIL)
@@ -132,22 +141,22 @@ internal class RegistraChaveEndpointTest(
         }
 
         with(thrown) {
-            assertEquals(Status.FAILED_PRECONDITION.code, status.code)
-            assertEquals("Cliente não encontrado no Itaú", status.description)
+            Assertions.assertEquals(Status.FAILED_PRECONDITION.code, status.code)
+            Assertions.assertEquals("Cliente não encontrado no Itaú", status.description)
         }
     }
 
     @Test
     fun `nao deve registrar chave pix quando parametros forem invalidos`() {
         val thrown = assertThrows<StatusRuntimeException> {
-            gRpcClient.registrar(RegistraChavePixRequest.newBuilder().build())
+            gRpcClient.registra(RegistraChavePixRequest.newBuilder().build())
         }
 
         with(thrown) {
-            assertEquals(Status.INVALID_ARGUMENT.code, status.code)
-            assertEquals("Dados inválidos", status.description)
-            assertThat(
-                violations(), containsInAnyOrder(
+            Assertions.assertEquals(Status.INVALID_ARGUMENT.code, status.code)
+            Assertions.assertEquals("Dados inválidos", status.description)
+            MatcherAssert.assertThat(
+                violations(), Matchers.containsInAnyOrder(
                     Pair("clienteId", "não deve estar em branco"),
                     Pair("clienteId", "não é um formato válido de UUID"),
                     Pair("tipoDeConta", "não deve ser nulo"),
@@ -160,7 +169,7 @@ internal class RegistraChaveEndpointTest(
     @Test
     fun `nao deve registrar chave pix quando parametros forem invalidos - chave invalida`() {
         val thrown = assertThrows<StatusRuntimeException> {
-            gRpcClient.registrar(
+            gRpcClient.registra(
                 RegistraChavePixRequest.newBuilder()
                     .setClienteId(CLIENTE_ID.toString())
                     .setTipoDeChave(TipoDeChave.CPF)
@@ -171,10 +180,10 @@ internal class RegistraChaveEndpointTest(
         }
 
         with(thrown) {
-            assertEquals(Status.INVALID_ARGUMENT.code, status.code)
-            assertEquals("Dados inválidos", status.description)
-            assertThat(
-                violations(), containsInAnyOrder(
+            Assertions.assertEquals(Status.INVALID_ARGUMENT.code, status.code)
+            Assertions.assertEquals("Dados inválidos", status.description)
+            MatcherAssert.assertThat(
+                violations(), Matchers.containsInAnyOrder(
                     Pair(
                         "?? key ??",
                         "tipo de (CPF) inválido"
@@ -185,14 +194,19 @@ internal class RegistraChaveEndpointTest(
     }
 
     @Test
-    fun `nao deve registrar chave pix quando nao for possivel registrar chave no Bacen`() {
-        `when`(itauClient.verificaContaPorTipo(clienteId = CLIENTE_ID.toString(), tipoDeConta = "CONTA_CORRENTE"))
+    fun `nao deve registrar chave pix quando nao for possivel registrar chave no BCB`() {
+        Mockito.`when`(
+            itauClient.verificaContaPorTipo(
+                clienteId = CLIENTE_ID.toString(),
+                tipoDeConta = "CONTA_CORRENTE"
+            )
+        )
             .thenReturn(HttpResponse.ok(dadosDaContaResponse()))
-        `when`(bacenClient.createPixKey(createPixKeyRequestDto()))
+        Mockito.`when`(bcbClient.createPixKey(createPixKeyRequestDto()))
             .thenReturn(HttpResponse.badRequest())
 
         val thrown = assertThrows<StatusRuntimeException> {
-            gRpcClient.registrar(
+            gRpcClient.registra(
                 RegistraChavePixRequest.newBuilder()
                     .setClienteId(CLIENTE_ID.toString())
                     .setTipoDeChave(TipoDeChave.EMAIL)
@@ -203,8 +217,11 @@ internal class RegistraChaveEndpointTest(
         }
 
         with(thrown) {
-            assertEquals(Status.FAILED_PRECONDITION.code, status.code)
-            assertEquals("Erro ao registrar chave Pix no Banco Central do Brasil (BCB/Bacen)", status.description)
+            Assertions.assertEquals(Status.FAILED_PRECONDITION.code, status.code)
+            Assertions.assertEquals(
+                "Erro ao registrar chave Pix no Banco Central do Brasil (BCB)",
+                status.description
+            )
         }
     }
 
@@ -270,9 +287,9 @@ internal class RegistraChaveEndpointTest(
         )
     }
 
-    @MockBean(BancoCentralClient::class)
-    fun bacenClient(): BancoCentralClient? {
-        return Mockito.mock(BancoCentralClient::class.java)
+    @MockBean(BcbClient::class)
+    fun bcbClient(): BcbClient? {
+        return Mockito.mock(BcbClient::class.java)
     }
 
     @MockBean(ContasDeClientesItauClient::class)
@@ -283,7 +300,7 @@ internal class RegistraChaveEndpointTest(
     @Factory
     private class Clients {
         @Bean
-        fun blockingStub(@GrpcChannel(NAME) channel: ManagedChannel): KeyManagerRegistraPixServiceGrpc.KeyManagerRegistraPixServiceBlockingStub? {
+        fun blockingStub(@GrpcChannel(GrpcServerChannel.NAME) channel: ManagedChannel): KeyManagerRegistraPixServiceGrpc.KeyManagerRegistraPixServiceBlockingStub? {
             return KeyManagerRegistraPixServiceGrpc.newBlockingStub(channel)
         }
     }
