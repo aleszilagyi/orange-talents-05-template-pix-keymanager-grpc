@@ -31,7 +31,8 @@ import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
-import org.mockito.Mockito
+import org.mockito.Mockito.`when`
+import org.mockito.Mockito.mock
 import java.time.LocalDateTime
 import java.util.*
 import javax.inject.Inject
@@ -61,14 +62,9 @@ internal class RegistraChaveEndpointTest(
     @Test
     fun `deve registrar nova chave pix`() {
         // mockar o response do cliente para preparar o cenário de cliente OK
-        Mockito.`when`(
-            itauClient.verificaContaPorTipo(
-                clienteId = CLIENTE_ID.toString(),
-                tipoDeConta = "CONTA_CORRENTE"
-            )
-        )
+        `when`(itauClient.verificaContaPorTipo(clienteId = CLIENTE_ID.toString(), tipoDeConta = "CONTA_CORRENTE"))
             .thenReturn(HttpResponse.ok(dadosDaContaResponse()))
-        Mockito.`when`(bcbClient.createPixKey(createPixKeyRequestDto()))
+        `when`(bcbClient.createPixKey(createPixKeyRequestDto()))
             .thenReturn(HttpResponse.created(createPixKeyResponseDto()))
 
         // fazer o request no GRpc e atribuir na variável Reply
@@ -120,7 +116,7 @@ internal class RegistraChaveEndpointTest(
     @Test
     fun `nao deve registrar chave pix quando nao encontrar dados da conta cliente`() {
         // mockar um notfound pro ItauClient
-        Mockito.`when`(
+        `when`(
             itauClient.verificaContaPorTipo(
                 clienteId = CLIENTE_ID.toString(),
                 tipoDeConta = "CONTA_CORRENTE"
@@ -194,15 +190,39 @@ internal class RegistraChaveEndpointTest(
     }
 
     @Test
+    fun `nao deve registrar chave pix quando email for invalido`() {
+        val thrown = assertThrows<StatusRuntimeException> {
+            gRpcClient.registra(
+                RegistraChavePixRequest.newBuilder()
+                    .setTipoDeChave(TipoDeChave.EMAIL)
+                    .setChavePix("KANG_O_CONQUISTADOR")
+                    .setClienteId(CLIENTE_ID.toString())
+                    .setTipoDeConta(TipoDeConta.CONTA_CORRENTE)
+                    .build()
+            )
+        }
+
+        with(thrown) {
+            Assertions.assertEquals(Status.INVALID_ARGUMENT.code, status.code)
+            Assertions.assertEquals("Dados inválidos", status.description)
+            MatcherAssert.assertThat(
+                violations(), Matchers.containsInAnyOrder(
+                    Pair("?? key ??", "tipo de (EMAIL) inválido"),
+                )
+            )
+        }
+    }
+
+    @Test
     fun `nao deve registrar chave pix quando nao for possivel registrar chave no BCB`() {
-        Mockito.`when`(
+        `when`(
             itauClient.verificaContaPorTipo(
                 clienteId = CLIENTE_ID.toString(),
                 tipoDeConta = "CONTA_CORRENTE"
             )
         )
             .thenReturn(HttpResponse.ok(dadosDaContaResponse()))
-        Mockito.`when`(bcbClient.createPixKey(createPixKeyRequestDto()))
+        `when`(bcbClient.createPixKey(createPixKeyRequestDto()))
             .thenReturn(HttpResponse.badRequest())
 
         val thrown = assertThrows<StatusRuntimeException> {
@@ -289,12 +309,12 @@ internal class RegistraChaveEndpointTest(
 
     @MockBean(BcbClient::class)
     fun bcbClient(): BcbClient? {
-        return Mockito.mock(BcbClient::class.java)
+        return mock(BcbClient::class.java)
     }
 
     @MockBean(ContasDeClientesItauClient::class)
     fun itauClient(): ContasDeClientesItauClient? {
-        return Mockito.mock(ContasDeClientesItauClient::class.java)
+        return mock(ContasDeClientesItauClient::class.java)
     }
 
     @Factory

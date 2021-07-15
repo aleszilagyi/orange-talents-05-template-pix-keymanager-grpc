@@ -4,12 +4,11 @@ import br.com.orangetalents.model.ChavePixModel
 import br.com.orangetalents.model.ContaEmbeddable
 import br.com.orangetalents.model.TipoDeChaveModel
 import br.com.orangetalents.model.TipoDeContaModel
+import br.com.orangetalents.dto.DetalheChavePixDto
+import br.com.orangetalents.service.detalha.Instituicoes
 import io.micronaut.http.HttpResponse
 import io.micronaut.http.MediaType.APPLICATION_XML
-import io.micronaut.http.annotation.Body
-import io.micronaut.http.annotation.Delete
-import io.micronaut.http.annotation.PathVariable
-import io.micronaut.http.annotation.Post
+import io.micronaut.http.annotation.*
 import io.micronaut.http.client.annotation.Client
 import java.time.LocalDateTime
 
@@ -18,11 +17,18 @@ interface BcbClient {
     @Post("/api/v1/pix/keys", produces = [APPLICATION_XML], consumes = [APPLICATION_XML])
     fun createPixKey(@Body bodyRequest: CreatePixKeyRequestDto): HttpResponse<CreatePixKeyResponseDto>
 
-    @Delete("/api/v1/pix/keys/{key}",
+    @Delete(
+        "/api/v1/pix/keys/{key}",
         produces = [APPLICATION_XML],
         consumes = [APPLICATION_XML]
     )
     fun delete(@PathVariable key: String, @Body request: DeletePixKeyRequest): HttpResponse<DeletePixKeyResponse>
+
+    @Get(
+        "/api/v1/pix/keys/{key}",
+        consumes = [APPLICATION_XML]
+    )
+    fun findByKey(@PathVariable key: String): HttpResponse<PixKeyDetailsResponse>
 }
 
 data class CreatePixKeyResponseDto(
@@ -133,3 +139,29 @@ data class DeletePixKeyResponse(
     val participant: String,
     val deletedAt: LocalDateTime
 )
+
+data class PixKeyDetailsResponse(
+    val keyType: PixKeyType,
+    val key: String,
+    val bankAccount: BankAccount,
+    val owner: Owner,
+    val createdAt: LocalDateTime
+) {
+    fun toDto(): DetalheChavePixDto {
+        return DetalheChavePixDto(
+            tipo = keyType.domainType!!,
+            chave = this.key,
+            tipoDeConta = when (this.bankAccount.accountType) {
+                BankAccount.AccountType.CACC -> TipoDeContaModel.CONTA_CORRENTE
+                BankAccount.AccountType.SVGS -> TipoDeContaModel.CONTA_POUPANCA
+            },
+            conta = ContaEmbeddable(
+                instituicao = Instituicoes.nome(bankAccount.participant),
+                nomeDoTitular = owner.name,
+                cpfDoTitular = owner.taxIdNumber,
+                agencia = bankAccount.branch,
+                numero = bankAccount.accountNumber
+            )
+        )
+    }
+}

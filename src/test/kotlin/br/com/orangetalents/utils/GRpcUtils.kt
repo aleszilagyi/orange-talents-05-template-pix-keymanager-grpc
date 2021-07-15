@@ -10,5 +10,5 @@ fun StatusRuntimeException.violations(): List<Pair<String, String>> {
         .unpack(BadRequest::class.java)
 
     return details.fieldViolationsList
-        .map { it.field to it.description }
+        .map { fieldViolation -> fieldViolation.field to fieldViolation.description }
 }
