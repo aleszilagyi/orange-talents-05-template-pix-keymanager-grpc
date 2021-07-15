@@ -4,6 +4,7 @@ option java_multiple_files = true;
 option java_outer_classname = "DesafioPix";
 
 package br.com.orangetalents;
+import "google/protobuf/timestamp.proto";
 
 service KeyManagerRegistraPixService {
   rpc registra (RegistraChavePixRequest) returns (RegistraChavePixReply) {}
@@ -12,6 +13,16 @@ service KeyManagerRegistraPixService {
 service KeyManagerRemovePixService {
   rpc remove (RemoveChavePixRequest) returns (RemoveChavePixReply) {}
 }
+
+service KeyManagerListaPixService {
+  rpc lista (ListaChavesPixRequest) returns (ListaChavesPixReply) {}
+}
+
+service KeyManagerDetalhaPixService {
+  rpc detalha (DetalhesChavePixRequest) returns (DetalhesChavePixReply) {}
+}
+
+//UTILS
 
 enum TipoDeChave{
   UNKNOWN_CHAVE = 0;
@@ -27,6 +38,29 @@ enum TipoDeConta{
   CONTA_POUPANCA = 2;
 }
 
+message ContaInfo {
+  TipoDeConta tipo = 1;
+  string instituicao = 2;
+  string nomeDoTitular = 3;
+  string cpfDoTitular = 4;
+  string agencia = 5;
+  string numeroDaConta = 6;
+}
+
+message ChavePix {
+  TipoDeChave tipo = 1;
+  string chave = 2;
+  ContaInfo conta = 3;
+  google.protobuf.Timestamp criadaEm = 4;
+}
+
+message FiltroPorPixId {
+  string clienteId = 1;
+  string pixId = 2;
+}
+
+//REGISTRA PIX
+
 message RegistraChavePixRequest {
   string clienteId = 1;
   TipoDeChave tipoDeChave = 2;
@@ -39,6 +73,8 @@ message RegistraChavePixReply {
   string pixId = 2;
 }
 
+//REMOVE PIX
+
 message RemoveChavePixRequest {
   string clienteId = 1;
   string pixId = 2;
@@ -47,4 +83,39 @@ message RemoveChavePixRequest {
 message RemoveChavePixReply {
   string clienteId = 1;
   string pixId = 2;
+}
+
+//LISTA PIX
+
+message ListaChavesPixRequest {
+  string clienteId = 1;
+}
+
+message ListaChavesPixReply {
+
+  message ChavePix {
+    string pixId = 1;
+    TipoDeChave tipo = 2;
+    string chave = 3;
+    TipoDeConta tipoDeConta = 4;
+    google.protobuf.Timestamp criadaEm = 5;
+  }
+
+  string clienteId = 1;
+  repeated ChavePix chaves = 2;
+}
+
+//DETALHES
+
+message DetalhesChavePixRequest {
+  oneof filtro {
+    FiltroPorPixId pixId = 1;
+    string chave = 2;
+  }
+}
+
+message DetalhesChavePixReply {
+  string clienteId = 1;
+  string pixId = 2;
+  ChavePix chave = 3;
 }
