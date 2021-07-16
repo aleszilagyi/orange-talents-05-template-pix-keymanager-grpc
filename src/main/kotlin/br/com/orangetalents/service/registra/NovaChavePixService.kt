@@ -10,7 +10,6 @@ import br.com.orangetalents.service.clientItau.ContasDeClientesItauClient
 import io.micronaut.http.HttpStatus
 import io.micronaut.validation.Validated
 import org.slf4j.LoggerFactory
-import javax.inject.Inject
 import javax.inject.Singleton
 import javax.transaction.Transactional
 import javax.validation.Valid
@@ -18,9 +17,9 @@ import javax.validation.Valid
 @Validated
 @Singleton
 class NovaChavePixService(
-    @Inject val repository: ChavePixRepository,
-    @Inject val itauClient: ContasDeClientesItauClient,
-    @Inject val BcbClient: BcbClient
+    val repository: ChavePixRepository,
+    val itauClient: ContasDeClientesItauClient,
+    val bcbClient: BcbClient
 ) {
     private val LOGGER = LoggerFactory.getLogger(this::class.java)
 
@@ -39,7 +38,7 @@ class NovaChavePixService(
             LOGGER.info("Registrando chave Pix no Banco Central do Brasil (BCB): $it")
         }
 
-        val bcbResponse = BcbClient.createPixKey(bcbRequest)
+        val bcbResponse = bcbClient.createPixKey(bcbRequest)
         if (bcbResponse.status != HttpStatus.CREATED)
             throw IllegalStateException("Erro ao registrar chave Pix no Banco Central do Brasil (BCB)")
 

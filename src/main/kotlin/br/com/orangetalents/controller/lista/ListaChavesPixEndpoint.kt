@@ -11,7 +11,7 @@ import javax.inject.Singleton
 
 @ErrorHandler
 @Singleton
-class ListaChavesPixEndpoint(@Inject private val service: ListaChavesService) :
+class ListaChavesPixEndpoint(private val service: ListaChavesService) :
     KeyManagerListaPixServiceGrpc.KeyManagerListaPixServiceImplBase() {
     override fun lista(request: ListaChavesPixRequest, responseObserver: StreamObserver<ListaChavesPixReply>) {
         val chaves = service.lista(request.clienteId)

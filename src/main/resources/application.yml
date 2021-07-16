@@ -30,6 +30,6 @@ itau:
   contas:
     url: ${ITAU_URL:`http://localhost:9091`}
 
-bacen:
+bcb:
   pix:
     url: ${BACEN_URL:`http://localhost:8082`}

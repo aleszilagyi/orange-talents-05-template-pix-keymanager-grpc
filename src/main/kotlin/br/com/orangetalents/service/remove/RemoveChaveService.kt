@@ -8,7 +8,6 @@ import br.com.orangetalents.service.clientBcb.DeletePixKeyRequest
 import io.micronaut.http.HttpStatus
 import io.micronaut.validation.Validated
 import java.util.*
-import javax.inject.Inject
 import javax.inject.Singleton
 import javax.transaction.Transactional
 import javax.validation.Valid
@@ -16,8 +15,8 @@ import javax.validation.Valid
 @Validated
 @Singleton
 class RemoveChaveService(
-    @Inject val repository: ChavePixRepository,
-    @Inject val BcbClient: BcbClient
+    val repository: ChavePixRepository,
+    val bcbClient: BcbClient
 ) {
     @Transactional
     fun remove(@Valid request: RemoveChavePixDto?) {
@@ -32,7 +31,7 @@ class RemoveChaveService(
 
         val deleteRequest = DeletePixKeyRequest(chave.chave)
 
-        val bacenResponse = BcbClient.delete(key = chave.chave, request = deleteRequest)
+        val bacenResponse = bcbClient.delete(key = chave.chave, request = deleteRequest)
         if (bacenResponse.status != HttpStatus.OK) {
             throw IllegalStateException("Erro ao remover chave Pix no Banco Central do Brasil (BCB/Bacen)")
         }

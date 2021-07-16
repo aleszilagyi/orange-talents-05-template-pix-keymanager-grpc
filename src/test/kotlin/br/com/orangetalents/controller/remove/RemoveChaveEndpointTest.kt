@@ -92,7 +92,7 @@ internal class RemoveChaveEndpointTest(
     }
 
     @Test
-    fun `nao deve remover chave pix existente quando tiver algum erro no serviço do BCB`() {
+    fun `nao deve remover chave pix existente quando tiver algum erro no servico do BCB`() {
         `when`(bcbClient.delete(EMAIL_PIX, DeletePixKeyRequest(EMAIL_PIX)))
             .thenReturn(HttpResponse.unprocessableEntity())
 

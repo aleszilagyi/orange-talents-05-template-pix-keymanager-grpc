@@ -9,7 +9,7 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-class ExceptionHandlerInterceptor(@Inject val resolver: ExceptionHandlerResolver) :
+class ExceptionHandlerInterceptor(private val resolver: ExceptionHandlerResolver) :
     MethodInterceptor<BindableService, Any?> {
 
     private val LOGGER = LoggerFactory.getLogger(this.javaClass)

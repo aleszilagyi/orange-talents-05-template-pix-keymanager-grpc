@@ -15,9 +15,9 @@ import javax.validation.Validator
 @Validated
 @Singleton
 class DetalhaChavesService(
-    @Inject private val repository: ChavePixRepository,
-    @Inject private val bcbClient: BcbClient,
-    @Inject private val validator: Validator
+    private val repository: ChavePixRepository,
+    private val bcbClient: BcbClient,
+    private val validator: Validator
 ) {
     fun detalha(request: DetalhesChavePixRequest): DetalhesChavePixReply? {
         val filtroDeDetalhes = request.toModel(validator)

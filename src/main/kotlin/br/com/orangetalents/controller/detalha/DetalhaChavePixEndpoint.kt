@@ -11,7 +11,7 @@ import javax.inject.Singleton
 
 @ErrorHandler
 @Singleton
-class DetalhaChavePixEndpoint(@Inject private val service: DetalhaChavesService) :
+class DetalhaChavePixEndpoint(private val service: DetalhaChavesService) :
     KeyManagerDetalhaPixServiceGrpc.KeyManagerDetalhaPixServiceImplBase() {
 
     override fun detalha(request: DetalhesChavePixRequest, responseObserver: StreamObserver<DetalhesChavePixReply>) {

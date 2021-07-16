@@ -12,7 +12,7 @@ import javax.inject.Singleton
 
 @ErrorHandler
 @Singleton
-class RemoveChaveEndpoint(@Inject private val service: RemoveChaveService) :
+class RemoveChaveEndpoint(private val service: RemoveChaveService) :
     KeyManagerRemovePixServiceGrpc.KeyManagerRemovePixServiceImplBase() {
     override fun remove(request: RemoveChavePixRequest, responseObserver: StreamObserver<RemoveChavePixReply>) {
         val requestDto = request.toDto()

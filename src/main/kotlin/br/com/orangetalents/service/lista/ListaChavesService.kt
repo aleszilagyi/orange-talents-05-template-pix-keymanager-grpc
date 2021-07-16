@@ -9,18 +9,17 @@ import com.google.protobuf.Timestamp
 import io.micronaut.validation.Validated
 import java.time.ZoneId
 import java.util.*
-import javax.inject.Inject
 import javax.inject.Singleton
 import javax.validation.constraints.NotBlank
 
 @Validated
 @Singleton
 class ListaChavesService(
-    @Inject private val repository: ChavePixRepository,
+    private val repository: ChavePixRepository,
 ) {
     fun lista(@NotBlank @ValidUUID clienteId: String?): List<ListaChavesPixReply.ChavePix> {
         val clienteIdUUID = UUID.fromString(clienteId)
-        return repository.findAllByClienteId(clienteIdUUID).map { chave ->
+        val chavesDoCliente = repository.findAllByClienteId(clienteIdUUID).map { chave ->
             ListaChavesPixReply.ChavePix.newBuilder()
                 .setPixId(chave.id.toString())
                 .setTipo(TipoDeChave.valueOf(chave.tipoDeChave.name))
@@ -35,5 +34,6 @@ class ListaChavesService(
                 })
                 .build()
         }
+        return chavesDoCliente
     }
 }

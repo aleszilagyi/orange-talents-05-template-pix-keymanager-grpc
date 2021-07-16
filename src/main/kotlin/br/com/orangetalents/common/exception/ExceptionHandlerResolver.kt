@@ -6,15 +6,9 @@ import javax.inject.Singleton
 
 @Singleton
 class ExceptionHandlerResolver(
-    @Inject private val handlers: List<IExceptionHandler<*>>,
+    private val handlers: List<IExceptionHandler<*>>,
 ) {
     private var defaultHandler: IExceptionHandler<Exception> = DefaultExceptionHandler()
-
-    constructor(handlers: List<IExceptionHandler<Exception>>, defaultHandler: IExceptionHandler<Exception>) : this(
-        handlers
-    ) {
-        this.defaultHandler = defaultHandler
-    }
 
     fun resolve(e: Exception): IExceptionHandler<*> {
         val foundHandlers = handlers.filter { handler -> handler.supports(e) }

@@ -12,7 +12,7 @@ import javax.inject.Singleton
 
 @ErrorHandler
 @Singleton
-class RegistraChaveEndpoint(@Inject private val service: NovaChavePixService) :
+class RegistraChaveEndpoint(private val service: NovaChavePixService) :
     KeyManagerRegistraPixServiceGrpc.KeyManagerRegistraPixServiceImplBase() {
     override fun registra(
         request: RegistraChavePixRequest,
