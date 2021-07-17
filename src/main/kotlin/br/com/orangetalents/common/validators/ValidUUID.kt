@@ -23,7 +23,7 @@ import kotlin.reflect.KClass
 @Retention(RUNTIME)
 @Target(FIELD, CONSTRUCTOR, PROPERTY, VALUE_PARAMETER)
 annotation class ValidUUID(
-    val message: String = "formato inválido de identificador: (\${validatedValue)",
+    val message: String = "formato inválido de identificador: (\${validatedValue})",
     val groups: Array<KClass<Any>> = [],
     val payload: Array<KClass<Payload>> = [],
 )
