@@ -162,8 +162,8 @@ internal class RemoveChaveEndpointTest(
                 violations(), containsInAnyOrder(
                     Pair("pixId", "não deve estar em branco"),
                     Pair("clienteId", "não deve estar em branco"),
-                    Pair("pixId", "não é um formato válido de UUID"),
-                    Pair("clienteId", "não é um formato válido de UUID"),
+                    Pair("pixId", "formato inválido de identificador: []"),
+                    Pair("clienteId", "formato inválido de identificador: []"),
                 )
             )
         }

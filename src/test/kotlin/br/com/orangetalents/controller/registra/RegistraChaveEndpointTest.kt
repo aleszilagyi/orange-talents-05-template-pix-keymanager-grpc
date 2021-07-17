@@ -154,7 +154,7 @@ internal class RegistraChaveEndpointTest(
             MatcherAssert.assertThat(
                 violations(), Matchers.containsInAnyOrder(
                     Pair("clienteId", "não deve estar em branco"),
-                    Pair("clienteId", "não é um formato válido de UUID"),
+                    Pair("clienteId", "formato inválido de identificador: []"),
                     Pair("tipoDeConta", "não deve ser nulo"),
                     Pair("tipoDeChave", "não deve ser nulo"),
                 )

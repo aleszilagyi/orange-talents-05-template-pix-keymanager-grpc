@@ -123,7 +123,7 @@ internal class ListaChavesPixEndpointTest(
             MatcherAssert.assertThat(
                 violations(), containsInAnyOrder(
                     Pair("clienteId", "não deve estar em branco"),
-                    Pair("clienteId", "não é um formato válido de UUID")
+                    Pair("clienteId", "formato inválido de identificador: []")
                 )
             )
         }
