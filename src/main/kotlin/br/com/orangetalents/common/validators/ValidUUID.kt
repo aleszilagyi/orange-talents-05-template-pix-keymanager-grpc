@@ -19,7 +19,7 @@ import kotlin.reflect.KClass
     flags = [Pattern.Flag.CASE_INSENSITIVE]
 )
 @ReportAsSingleViolation
-@Constraint(validatedBy = [ValidUUIDValidator::class])
+@Constraint(validatedBy = [])
 @Retention(RUNTIME)
 @Target(FIELD, CONSTRUCTOR, PROPERTY, VALUE_PARAMETER)
 annotation class ValidUUID(
@@ -27,20 +27,3 @@ annotation class ValidUUID(
     val groups: Array<KClass<Any>> = [],
     val payload: Array<KClass<Payload>> = [],
 )
-
-@Singleton
-class ValidUUIDValidator : ConstraintValidator<ValidUUID, String> {
-    override fun isValid(
-        value: String?,
-        annotationMetadata: AnnotationValue<ValidUUID>,
-        context: ConstraintValidatorContext
-    ): Boolean {
-        if (value.isNullOrBlank()) return false
-        try {
-            UUID.fromString(value)
-        } catch (e: Exception) {
-            return false
-        }
-        return true
-    }
-}
