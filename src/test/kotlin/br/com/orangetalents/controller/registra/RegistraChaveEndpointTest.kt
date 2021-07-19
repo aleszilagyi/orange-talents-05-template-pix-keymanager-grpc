@@ -245,6 +245,38 @@ internal class RegistraChaveEndpointTest(
         }
     }
 
+    @Test
+    fun `nao deve registrar chave pix quando já tiver chave registrada no BCB`() {
+        `when`(
+            itauClient.verificaContaPorTipo(
+                clienteId = CLIENTE_ID.toString(),
+                tipoDeConta = "CONTA_CORRENTE"
+            )
+        )
+            .thenReturn(HttpResponse.ok(dadosDaContaResponse()))
+        `when`(bcbClient.createPixKey(createPixKeyRequestDto()))
+            .thenReturn(HttpResponse.unprocessableEntity())
+
+        val thrown = assertThrows<StatusRuntimeException> {
+            gRpcClient.registra(
+                RegistraChavePixRequest.newBuilder()
+                    .setClienteId(CLIENTE_ID.toString())
+                    .setTipoDeChave(TipoDeChave.EMAIL)
+                    .setChavePix(EMAIL_PIX)
+                    .setTipoDeConta(TipoDeConta.CONTA_CORRENTE)
+                    .build()
+            )
+        }
+
+        with(thrown) {
+            Assertions.assertEquals(Status.FAILED_PRECONDITION.code, status.code)
+            Assertions.assertEquals(
+                "Erro ao registrar chave Pix no Banco Central do Brasil (BCB)",
+                status.description
+            )
+        }
+    }
+
     private fun instaciaChave(tipo: TipoDeChaveModel, chave: String, clienteId: UUID): ChavePixModel {
         return ChavePixModel(
             clienteId = clienteId,
