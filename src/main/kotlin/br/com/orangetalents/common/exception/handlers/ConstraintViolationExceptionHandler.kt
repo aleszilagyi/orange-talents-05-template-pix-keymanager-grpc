@@ -14,10 +14,10 @@ class ConstraintViolationExceptionHandler : IExceptionHandler<ConstraintViolatio
     override fun handle(e: ConstraintViolationException): StatusWithDetails {
 
         val details = BadRequest.newBuilder()
-            .addAllFieldViolations(e.constraintViolations.map {
+            .addAllFieldViolations(e.constraintViolations.map { violation ->
                 BadRequest.FieldViolation.newBuilder()
-                    .setField(it.propertyPath.last().name ?: "?? key ??") // TODO: Precisa implementar o handler das validations a nível de classe, chegam diferente assim como no Spring, talvez resolve com payload
-                    .setDescription(it.message)
+                    .setField(violation.propertyPath.last().name ?: "chavePix")
+                    .setDescription(violation.message)
                     .build()
             })
             .build()
