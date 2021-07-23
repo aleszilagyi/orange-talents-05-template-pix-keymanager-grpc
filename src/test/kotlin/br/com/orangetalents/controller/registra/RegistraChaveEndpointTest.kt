@@ -181,7 +181,7 @@ internal class RegistraChaveEndpointTest(
             MatcherAssert.assertThat(
                 violations(), Matchers.containsInAnyOrder(
                     Pair(
-                        "?? key ??",
+                        "chavePix",
                         "tipo de (CPF) inválido"
                     ), //TODO: Ajustar essa parte do fieldError, talvez retornar como "global error?" sem field específico, ou pegar no Payload
                 )
@@ -207,7 +207,7 @@ internal class RegistraChaveEndpointTest(
             Assertions.assertEquals("Dados inválidos", status.description)
             MatcherAssert.assertThat(
                 violations(), Matchers.containsInAnyOrder(
-                    Pair("?? key ??", "tipo de (EMAIL) inválido"),
+                    Pair("chavePix", "tipo de (EMAIL) inválido"),
                 )
             )
         }
